@@ -31,7 +31,7 @@ class Shape {
         for(int i = 0, length = points.size(); i < length; i++) {
             int nextIdx = i+1;
             Point one = points.get(i);
-            Point two = nextIdx < length ? points.get(nextIdx) : points.get(0);
+            Point two = nextIdx < length ? points.get(nextIdx) : points.getFirst();
             double distance = one.distance(two);
             if(distance > l) l = distance;
             p += distance;
@@ -50,27 +50,76 @@ class Shape {
     }
 }
 
-public class PerimeterAssignmentRunner {
-    public static void main (String[] args) {
-        double largestPerimeter = 0;
-        String largestPerimeterFn = "";
-        for (int i = 1; i < 5; i++) {
-            List<Point> points = getPoints("example"+i+".txt");
-            Shape shape = new Shape(points);
-            double perimeter = shape.getPerimeter();
-            if (perimeter > largestPerimeter) {
-                largestPerimeter = perimeter;
-                largestPerimeterFn = "example"+i+".txt";
-            }
-        }
+class ShapeProcessor {
+    private Map<String, Shape> shapes;
 
-        System.out.println(largestPerimeterFn);
+    private String largestFileName;
+    private double largestPerimeter;
+
+    ShapeProcessor() {
+        this.largestPerimeter = 0;
+        this.largestFileName = "";
+
+        this.shapes = new HashMap<>();
     }
 
-    public static List<Point> getPoints(String fileName) {
-        List<Point> pointList = new ArrayList<>();
+    public void addShape(String fileName, Shape shape) {
+        this.shapes.put(fileName, shape);
+    }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+    public void processShapes() {
+        double lPerimeter = 0;
+        String lPerimeterFN = "";
+        for (Map.Entry<String, Shape> shape : shapes.entrySet()) {
+            double perimeter = shape.getValue().getPerimeter();
+            if (perimeter > largestPerimeter) {
+                lPerimeter = perimeter;
+                lPerimeterFN = shape.getKey();
+            }
+        }
+        this.largestFileName = lPerimeterFN;
+        this.largestPerimeter = lPerimeter;
+    }
+
+    public double getLargestPerimeter() {
+        return largestPerimeter;
+    }
+
+    public String getLargestPerimeterFileName() {
+        return largestFileName;
+    }
+}
+
+public class PerimeterAssignmentRunner {
+    public static void main (String[] args) {
+        processFiles("datatest", 7);
+        processFiles("example", 5);
+    }
+
+    public static void processFiles(String fileType, int maxLength) {
+        // init a ShapeProcessor
+        ShapeProcessor shapeProcessor = new ShapeProcessor();
+
+        // loop through files, create shape, and add it to ShapeProcessor
+        for (int i = 1; i < maxLength; i++) {
+            final String fileName = fileType + i + ".txt";
+            Shape shape = new Shape(getPoints(fileName));
+            shapeProcessor.addShape(fileName, shape);
+        }
+
+        // process shapes
+        shapeProcessor.processShapes();
+
+        // get data
+        System.out.println("---------------------------------------------------------");
+        System.out.println("Largest perimeter: "+ shapeProcessor.getLargestPerimeter());
+        System.out.println("Largest perimeter file name: "+ shapeProcessor.getLargestPerimeterFileName());
+    }
+
+    private static List<Point> getPoints(String fileName) {
+        List<Point> pointList = new ArrayList<>();
+        File file = new File("dataFiles", fileName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
