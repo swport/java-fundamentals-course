@@ -19,6 +19,10 @@ public class GeneFinder {
         }
     }
 
+    private static boolean isGeneValid(int startCodonIdx, int endCodonIdx) {
+        return (startCodonIdx - (3 + endCodonIdx)) % 3 == 0;
+    }
+
     private static String findAllValidGenes(String str) {
         StringBuilder genes = new StringBuilder();
         int atg = str.indexOf(START_CODON);
@@ -27,7 +31,7 @@ public class GeneFinder {
         // as long as we can find the gene
         while (atg > -1 && taa > -1) {
             // is the gene valid? if so, append it to the valid genes list
-            if((taa - (3 + atg)) % 3 == 0) {
+            if(isGeneValid(taa, atg)) {
                 genes.append(str, atg, j);
                 genes.append(", ");
             }
