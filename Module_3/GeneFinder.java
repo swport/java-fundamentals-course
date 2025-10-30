@@ -1,10 +1,6 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,20 +13,32 @@ public class GeneFinder {
         for(String dna: dnaList) {
             String[] dnaParts = dna.split(":");
             if(dnaParts.length == 2) {
-                String gene = findGene(dnaParts[1]);
-                System.out.println("First gene in file, "+dnaParts[0]+" : " + gene);
+                String genes = findAllValidGenes(dnaParts[1].toLowerCase());
+                System.out.println("All genes in file, "+dnaParts[0]+" : " + genes);
             }
         }
     }
 
-    private static String findGene(String str) {
-        str = str.toLowerCase();
+    private static String findAllValidGenes(String str) {
+        StringBuilder genes = new StringBuilder();
         int atg = str.indexOf(START_CODON);
-        int taa = str.indexOf(END_CODON, atg+3);
-        if((taa - (3 + atg)) % 3 == 0) {
-            return str.substring(atg, taa + 3);
+        int taa = str.indexOf(END_CODON, atg + 3);
+        int j = taa + 3;
+        // as long as we can find the gene
+        while (atg > -1 && taa > -1) {
+            // is the gene valid? if so, append it to the valid genes list
+            if((taa - (3 + atg)) % 3 == 0) {
+                genes.append(str, atg, j);
+                genes.append(", ");
+            }
+            atg = str.indexOf(START_CODON, j);
+            taa = str.indexOf(END_CODON, atg + 3);
+            j = taa + 3;
         }
-        return "NA";
+
+        return genes.isEmpty()
+                ? "Not-found"
+                : genes.toString().replaceAll("[\\s,]+$", "");
     }
 
     private static List<String> getDnaStrings(String fileType) {
